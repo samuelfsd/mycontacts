@@ -1,24 +1,86 @@
+const ContactsRepository = require('../repositories/ContactsRepository');
+
 class ContactController {
-  index(req, res) {
-    // listar todos os registros
+  async index(req, res) {
+    const contacts = await ContactsRepository.findAll();
 
-    res.send('send from contact controller ');
+    res.json(contacts);
   }
 
-  show() {
-    // obter UM registro
+  async show(req, res) {
+    const { id } = req.params;
+
+    const contact = await ContactsRepository.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    return res.json(contact);
   }
 
-  store() {
-    // criar novo registro
+  async store(req, res) {
+    const {
+      name, email, phone, category_id,
+    } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
+    const contactExists = await ContactsRepository.findByEmail(email);
+    if (contactExists) {
+      return res.status(400).json({ error: 'E-mail already exists' });
+    }
+
+    const contact = await ContactsRepository.create({
+      name, email, phone, category_id,
+    });
+
+    return res.status(201).json(contact);
   }
 
-  update() {
+  async update(req, res) {
     // editar um registro
+    const { id } = req.params;
+    const {
+      name, email, phone, category_id,
+    } = req.body;
+
+    const contactExists = await ContactsRepository.findById(id);
+
+    if (!contactExists) {
+      return res.status(404).json({ error: 'user not found' });
+    }
+
+    if (!name) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
+    const contactEmail = await ContactsRepository.findByEmail(email);
+    if (contactEmail && contactEmail.id !== id) {
+      return res.status(400).json({ error: 'E-mail already exists' });
+    }
+
+    const contact = await ContactsRepository.update(id, {
+      name, email, phone, category_id,
+    });
+
+    return res.status(200).json(contact);
   }
 
-  delete() {
-    // deletar um registro
+  async delete(req, res) {
+    const { id } = req.params;
+
+    const contact = await ContactsRepository.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: 'contact not found' });
+    }
+
+    await ContactsRepository.delete(id);
+
+    return res.sendStatus(204);
   }
 }
 
