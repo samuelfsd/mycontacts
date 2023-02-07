@@ -2,7 +2,9 @@ const ContactsRepository = require('../repositories/ContactsRepository');
 
 class ContactController {
   async index(req, res) {
-    const contacts = await ContactsRepository.findAll();
+    const { orderBy } = req.query;
+
+    const contacts = await ContactsRepository.findAll(orderBy);
 
     res.json(contacts);
   }
@@ -41,7 +43,6 @@ class ContactController {
   }
 
   async update(req, res) {
-    // editar um registro
     const { id } = req.params;
     const {
       name, email, phone, category_id,
